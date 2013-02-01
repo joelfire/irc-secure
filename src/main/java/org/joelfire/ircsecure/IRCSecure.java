@@ -41,7 +41,7 @@ public class IRCSecure {
     private static final int KEYSIZE_DEFAULT = 128;
     private static final boolean DEBUG = true;
 
-    private static Logger log = Logger.getGlobal(); 
+    private static Logger log = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME); 
 
     private SecretKey key;
     private AlgorithmParameterSpec spec = new IvParameterSpec(new byte[16]);
