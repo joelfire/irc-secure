@@ -1,26 +1,4 @@
-/**
-The MIT License
-
-Copyright (c) 2013 Joel Firehammer
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
+// Copyright (c) 2013 Joel Firehammer
 
 /**
  * This is a very simple IRC encryptor. It differs from SSL in that is actually
@@ -57,17 +35,16 @@ import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
 public class IRCSecure {
-    private static final String ADDR_DEFAULT = "irc.freenode.net";
     private static final int PORT_DEFAULT = 6667;
     private static final String KEY_DEFAULT = "hxAAN5Rpopi5/MWpt5rATQ==";
     private static final String ALGORITHM_DEFAULT = "AES";
     private static final int KEYSIZE_DEFAULT = 128;
-
     private static final boolean DEBUG = true;
+
+    private static Logger log = Logger.getGlobal(); 
 
     private SecretKey key;
     private AlgorithmParameterSpec spec = new IvParameterSpec(new byte[16]);
-    private Logger log = Logger.getGlobal(); 
     
     enum State {
         PLAINTEXT,
@@ -77,31 +54,41 @@ public class IRCSecure {
         CRYPT
     }
 
-    /**
-     * Pass in -k to generate a key.
-     * Otherwise [localPort] [server host] [server port]
-     * @param args
-     */
     public static void main(String args[]) {
+        if (args.length == 0) {
+            usage();
+            System.exit(1);
+        }
+        if (args[0].equals("-k")) {
+            String s = keyToString(generateKey(ALGORITHM_DEFAULT));
+            System.err.println(s);
+            System.exit(0);
+        }
+        String addr = args[0];
         int port = PORT_DEFAULT;
-        int remotePort = PORT_DEFAULT; 
-        if (args.length > 0) {
-            if (args[0].equals("-k")) {
-                String s = keyToString(generateKey(ALGORITHM_DEFAULT));
-                System.err.println(s);
-                System.exit(0);
+        int remotePort = PORT_DEFAULT;
+        try {
+            if (args.length > 1) {
+                remotePort = Integer.parseInt(args[1]);
             }
-            port = Integer.parseInt(args[0]);
-        }
-        
-        String addr = ADDR_DEFAULT;
-        if (args.length > 1) {
-            addr = args[1];
-        }
-        if (args.length > 2) {
-            remotePort = Integer.parseInt(args[2]);
+            if (args.length > 2) {
+                port = Integer.parseInt(args[2]);
+            }
+        } catch (NumberFormatException nfe) {
+            System.out.println(nfe);
+            usage();
+            System.exit(2);
         }
         new IRCSecure().runServer(port, addr, remotePort);
+    }
+    
+    private static void usage() {
+        System.out.println("Usage: ");
+        System.out.println("java -jar [this.jar] [-k] server_host [server_port] [local_port] ");
+        System.out.println("    -k generate key and quit");
+        System.out.println("    server_host     IRC server host");
+        System.out.println("    [server_port]   IRC server port, default: " + PORT_DEFAULT);
+        System.out.println("    [local_port]    local port, default: " + PORT_DEFAULT);
     }
         
     private void runServer(int localPort, String serverAddress, int remotePort) {
