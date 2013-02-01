@@ -9,6 +9,7 @@
  * It works, but a lot of basic functionality (like reading a key from a file, 
  * public/private crypt, etc.) is not there. Or put another way, do not judge please.
  * 
+ * Also Erik helped
  */
 
 package org.joelfire.ircsecure;
