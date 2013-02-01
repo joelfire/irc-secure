@@ -1,3 +1,38 @@
+/**
+The MIT License
+
+Copyright (c) 2013 Joel Firehammer
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+/**
+ * This is a very simple IRC encryptor. It differs from SSL in that is actually
+ * encrypts the content of message posted in channels. So anyone who is not 
+ * running this will see gibberish. 
+ * 
+ * Caveat: I wrote this years ago, and am posting this more as a way to evaluate github.
+ * It works, but a lot of basic functionality (like reading a key from a file, 
+ * public/private crypt, etc.) is not there. Or put another way, do not judge please.
+ * 
+ */
+
 package org.joelfire.ircsecure;
 
 import java.io.BufferedOutputStream;
@@ -28,8 +63,6 @@ public class IRCSecure {
     private static final String ALGORITHM_DEFAULT = "AES";
     private static final int KEYSIZE_DEFAULT = 128;
 
-    private static final int CHAR_LF = 10;
-    private static final int CHAR_CR = 13;
     private static final boolean DEBUG = true;
 
     private SecretKey key;
@@ -169,7 +202,7 @@ public class IRCSecure {
         StringBuffer cryptData = null;
         State state = State.PLAINTEXT;
         while ((i = is.read()) >= 0) {
-            if (i == CHAR_LF || i == CHAR_CR) {
+            if (i == '\n' || i == '\r') {
                 cryptData = pushBuffer(cryptData, direction, os);
                 os.write(i);
                 os.flush();
@@ -209,7 +242,7 @@ public class IRCSecure {
                 break;
 
             case EXPECT_MESSAGE: 
-                if (direction) {                  // encrypt
+                if (direction) {                 // encrypt
                     if (i == '*') {
                         state = State.PLAINTEXT;
                     } else if (i != 1) {         // TODO: can't recall what the 1 check was for
