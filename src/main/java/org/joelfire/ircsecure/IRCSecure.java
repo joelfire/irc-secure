@@ -9,6 +9,7 @@
  * It works, but a lot of basic functionality (like public/private crypt, etc.) is not there. 
  * Or put another way, do not judge please.
  * 
+ * Also Erik helped
  */
 
 package org.joelfire.ircsecure;
@@ -45,7 +46,7 @@ public class IRCSecure {
     private static final boolean DEBUG = true;
     private static final String CONFIG_FILE = ".irc-secure";
 
-    private Logger log = Logger.getLogger(getClass().getName()); 
+    private Logger log = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME); 
     private SecretKey key;
     private AlgorithmParameterSpec spec = new IvParameterSpec(new byte[16]);
     private String skey = KEY_DEFAULT;
