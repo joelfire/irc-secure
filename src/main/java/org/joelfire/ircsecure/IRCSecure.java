@@ -6,8 +6,8 @@
  * running this will see gibberish. 
  * 
  * Caveat: I wrote this years ago, and am posting this more as a way to evaluate github.
- * It works, but a lot of basic functionality (like reading a key from a file, 
- * public/private crypt, etc.) is not there. Or put another way, do not judge please.
+ * It works, but a lot of basic functionality (like public/private crypt, etc.) is not there. 
+ * Or put another way, do not judge please.
  * 
  * Also Erik helped
  */
@@ -15,6 +15,8 @@
 package org.joelfire.ircsecure;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,6 +25,7 @@ import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,11 +44,12 @@ public class IRCSecure {
     private static final String ALGORITHM_DEFAULT = "AES";
     private static final int KEYSIZE_DEFAULT = 128;
     private static final boolean DEBUG = true;
+    private static final String CONFIG_FILE = ".irc-secure";
 
-    private static Logger log = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME); 
-
+    private Logger log = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME); 
     private SecretKey key;
     private AlgorithmParameterSpec spec = new IvParameterSpec(new byte[16]);
+    private String skey = KEY_DEFAULT;
     
     enum State {
         PLAINTEXT,
@@ -55,7 +59,7 @@ public class IRCSecure {
         CRYPT
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
         if (args.length == 0) {
             usage();
             System.exit(1);
@@ -91,9 +95,32 @@ public class IRCSecure {
         System.out.println("    [server_port]   IRC server port, default: " + PORT_DEFAULT);
         System.out.println("    [local_port]    local port, default: " + PORT_DEFAULT);
     }
+    
+    private void readConfig() throws IOException {
+        String home = System.getProperty("user.home");
+        File file = new File(home, CONFIG_FILE);
+        if (file.exists()) {
+            log.info(file + " found, loading key");
+            Properties props = new Properties();
+            FileInputStream fileInputStream = new FileInputStream(file);
+            try {
+                props.load(fileInputStream);
+            } finally {
+                fileInputStream.close();
+            }
+            skey = props.getProperty("key");
+            if (skey == null) {
+                log.info("No key in the config file, will use the default key");
+            }
+        } else {
+            log.warning(file + " not found, will use the default key");
+        }
         
-    private void runServer(int localPort, String serverAddress, int remotePort) {
-        key = stringToKey(KEY_DEFAULT, ALGORITHM_DEFAULT);
+    }
+        
+    private void runServer(int localPort, String serverAddress, int remotePort) throws IOException {
+        readConfig();
+        key = stringToKey(skey, ALGORITHM_DEFAULT);
         log.info("Listening on port " + localPort + " to " + serverAddress);
         do {
             try {
